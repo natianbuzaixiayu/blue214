@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlueTube - 深度学习 · 思想交流</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --deep: #050d1a;
+      --ocean: #0a2342;
+      --mid-blue: #1a4a7a;
+      --bright-blue: #2d6ec2;
+      --sky: #4a9eff;
+      --teal: #00c9a7;
+      --amber: #f5a623;
+      --warm: #ff7c43;
+      --cream: #fff8ee;
+      --text: #e8eaf0;
+      --muted: #8a9ab5;
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    ::selection { background: rgba(74,158,255,0.3); color: #fff; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--deep); }
+    ::-webkit-scrollbar-thumb { background: var(--mid-blue); border-radius: 3px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 0 48px;
+      height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(5,13,26,0.7);
+      border-bottom: 1px solid var(--glass-border);
+      transition: all 0.4s ease;
+    }
+    nav.scrolled { background: rgba(5,13,26,0.92); }
+
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--sky);
+      box-shadow: 0 0 12px var(--sky);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      transition: color 0.3s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--sky);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      background: var(--bright-blue);
+      color: #fff !important;
+      padding: 8px 22px;
+      border-radius: 100px;
+      font-size: 0.85rem !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.5px !important;
+      transition: all 0.3s !important;
+    }
+    .nav-cta::after { display: none !important; }
+    .nav-cta:hover { background: var(--sky) !important; color: #fff !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(74,158,255,0.4); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% -10%, rgba(45,110,194,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 80% 60%, rgba(0,201,167,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 30% at 20% 70%, rgba(245,166,35,0.07) 0%, transparent 60%);
+    }
+
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(74,158,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,158,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 0%, transparent 80%);
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 820px; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(74,158,255,0.1);
+      border: 1px solid rgba(74,158,255,0.25);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 0.78rem;
+      color: var(--sky);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s ease forwards;
+    }
+    .hero-badge .spark {
+      width: 14px; height: 14px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a9eff' stroke-width='2'%3E%3Cpolygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    h1 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s ease forwards;
+    }
+
+    h1 .blue { color: var(--sky); }
+    h1 .amber { color: var(--amber); font-style: italic; }
+    h1 .wave { display: inline-block; animation: wave 3s ease-in-out infinite; transform-origin: bottom center; }
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(12deg); }
+      75% { transform: rotate(-8deg); }
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.9;
+      max-width: 580px;
+      margin: 0 auto 48px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s ease forwards;
+    }
+
+    .hero-actions {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s ease forwards;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--sky);
+      color: var(--deep);
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 30px rgba(74,158,255,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(74,158,255,0.5);
+      background: #6db3ff;
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent;
+      color: var(--text);
+      padding: 14px 28px;
+      border-radius: 100px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-ghost:hover { background: var(--glass); border-color: rgba(74,158,255,0.3); transform: translateY(-1px); }
+
+    .hero-stats {
+      display: flex; align-items: center; justify-content: center; gap: 48px;
+      margin-top: 80px;
+      opacity: 0;
+      animation: fadeUp 0.8s 1s ease forwards;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-num .accent { color: var(--sky); }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 6px; letter-spacing: 0.5px; }
+    .stat-divider { width: 1px; height: 40px; background: var(--glass-border); }
+
+    .scroll-hint {
+      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 0.72rem; letter-spacing: 2px;
+      opacity: 0; animation: fadeUp 1s 1.5s ease forwards;
+    }
+    .scroll-line {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+      animation: scrollAnim 2s ease-in-out infinite;
+    }
+    @keyframes scrollAnim {
+      0%, 100% { transform: scaleY(1); opacity: 1; }
+      50% { transform: scaleY(0.4); opacity: 0.3; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION COMMON ── */
+    section { padding: 100px 48px; position: relative; }
+    .section-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .section-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 300;
+      max-width: 520px;
+      line-height: 1.8;
+    }
+
+    /* ── ABOUT / WHAT WE DO ── */
+    .about {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .about-visual {
+      position: relative;
+      height: 400px;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .about-visual-inner {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--ocean) 0%, var(--mid-blue) 50%, rgba(0,201,167,0.2) 100%);
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px;
+      position: relative; overflow: hidden;
+    }
+    .about-visual-inner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(74,158,255,0.2) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(245,166,35,0.15) 0%, transparent 50%);
+    }
+    .about-icon-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      width: 200px; position: relative; z-index: 1;
+    }
+    .about-icon-cell {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      backdrop-filter: blur(10px);
+    }
+    .about-visual-text {
+      position: relative; z-index: 1;
+      text-align: center;
+    }
+    .about-visual-text h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.4rem; color: #fff;
+    }
+    .about-visual-text p {
+      font-size: 0.8rem; color: var(--muted); margin-top: 4px;
+    }
+
+    .about-content .features-list { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
+    .feature-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      padding: 16px;
+      border-radius: 14px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s;
+    }
+    .feature-item:hover { border-color: rgba(74,158,255,0.3); transform: translateX(4px); }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(74,158,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.1rem;
+    }
+    .feature-item h4 { font-size: 0.95rem; color: #fff; margin-bottom: 4px; }
+    .feature-item p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .features-section { max-width: 1100px; margin: 0 auto; }
+    .features-header { text-align: center; margin-bottom: 60px; }
+    .features-header .section-desc { margin: 0 auto; }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      padding: 36px 28px;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative; overflow: hidden;
+      cursor: default;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--bright-blue), var(--teal));
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(74,158,255,0.3);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    .feature-card h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.15rem; color: #fff; margin-bottom: 10px;
+    }
+    .feature-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
+
+    .feature-card:nth-child(1) .feature-card-icon { background: rgba(74,158,255,0.15); }
+    .feature-card:nth-child(2) .feature-card-icon { background: rgba(0,201,167,0.15); }
+    .feature-card:nth-child(3) .feature-card-icon { background: rgba(245,166,35,0.15); }
+    .feature-card:nth-child(4) .feature-card-icon { background: rgba(255,124,67,0.15); }
+    .feature-card:nth-child(5) .feature-card-icon { background: rgba(74,158,255,0.1); }
+    .feature-card:nth-child(6) .feature-card-icon { background: rgba(0,201,167,0.1); }
+
+    /* ── TOPICS ── */
+    .topics-section {
+      background: linear-gradient(180deg, transparent 0%, rgba(10,35,66,0.3) 50%, transparent 100%);
+    }
+    .topics-header { text-align: center; margin-bottom: 60px; }
+    .topics-header .section-desc { margin: 0 auto; }
+
+    .topics-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .topic-chip {
+      padding: 20px 24px;
+      border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      display: flex; align-items: center; gap: 14px;
+      transition: all 0.3s;
+      cursor: default;
+      text-decoration: none;
+      color: inherit;
+    }
+    .topic-chip:hover {
+      border-color: rgba(74,158,255,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .topic-chip .t-icon {
+      font-size: 1.5rem;
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .topic-chip .t-info h4 { font-size: 0.9rem; color: #fff; margin-bottom: 2px; }
+    .topic-chip .t-info span { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section { max-width: 1100px; margin: 0 auto; }
+    .testimonials-header { text-align: center; margin-bottom: 60px; }
+    .testimonials-header .section-desc { margin: 0 auto; }
+
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .testimonial-card {
+      padding: 32px 28px;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s;
+      position: relative;
+    }
+    .testimonial-card:hover { border-color: rgba(74,158,255,0.3); }
+    .testimonial-card .quote-mark {
+      font-family: 'DM Serif Display', serif;
+      font-size: 4rem;
+      color: rgba(74,158,255,0.15);
+      line-height: 1;
+      position: absolute; top: 16px; right: 24px;
+    }
+    .testimonial-card .stars { color: var(--amber); font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial-card blockquote {
+      font-size: 0.9rem; color: var(--text);
+      line-height: 1.8; margin-bottom: 20px;
+      font-style: italic;
+    }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 600;
+      color: #fff;
+    }
+    .testimonial-author .name { font-size: 0.85rem; color: #fff; font-weight: 500; }
+    .testimonial-author .role { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      max-width: 1100px; margin: 0 auto;
+      padding: 100px 48px;
+    }
+    .cta-card {
+      background: linear-gradient(135deg, var(--ocean) 0%, rgba(26,74,122,0.5) 50%, rgba(0,201,167,0.1) 100%);
+      border-radius: 32px;
+      border: 1px solid rgba(74,158,255,0.2);
+      padding: 80px 60px;
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(74,158,255,0.08) 0%, transparent 60%);
+    }
+    .cta-card h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      color: #fff; margin-bottom: 16px;
+      position: relative;
+    }
+    .cta-card p { color: var(--muted); font-size: 1rem; margin-bottom: 40px; position: relative; }
+    .cta-card .btn-primary { position: relative; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 60px 48px 40px;
+      border-top: 1px solid var(--glass-border);
+      max-width: 1100px; margin: 0 auto;
+    }
+    .footer-top {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    .footer-brand .nav-logo { margin-bottom: 14px; }
+    .footer-brand p { font-size: 0.85rem; color: var(--muted); line-height: 1.7; max-width: 280px; }
+    .footer-col h4 { font-size: 0.82rem; color: #fff; margin-bottom: 16px; letter-spacing: 0.5px; font-weight: 600; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.82rem; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--sky); }
+    .footer-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 28px;
+      border-top: 1px solid var(--glass-border);
+      font-size: 0.78rem; color: var(--muted);
+    }
+
+    /* mobile lang nav */
+    @media (max-width: 768px) {
+      .nav-links { display: none !important; }
+    }
+
+    /* ── VIDEO SECTION ── */
+    .video-section-wrap { max-width: 1100px; margin: 0 auto; }
+    .video-header { text-align: center; margin-bottom: 48px; }
+    .video-header .section-desc { margin: 0 auto; }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed rgba(74,158,255,0.3);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+      margin-bottom: 48px;
+      background: rgba(74,158,255,0.04);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--sky);
+      background: rgba(74,158,255,0.08);
+    }
+    .upload-zone.dragover { transform: scale(1.01); }
+
+    .upload-icon {
+      font-size: 3rem; color: var(--sky); margin-bottom: 16px;
+      animation: floatUp 3s ease-in-out infinite;
+    }
+    @keyframes floatUp {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .upload-text h3 { font-family: 'Noto Serif SC', serif; font-size: 1.2rem; color: #fff; margin-bottom: 8px; }
+    .upload-text p { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+
+    .btn-upload {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--sky); color: var(--deep);
+      padding: 10px 24px; border-radius: 100px;
+      font-size: 0.88rem; font-weight: 600;
+      border: none; cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(74,158,255,0.4); }
+
+    .upload-progress { margin-top: 20px; display: flex; align-items: center; gap: 12px; max-width: 400px; margin-left: auto; margin-right: auto; }
+    .progress-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--bright-blue), var(--sky)); border-radius: 3px; width: 0%; transition: width 0.3s; }
+    .progress-text { font-size: 0.8rem; color: var(--sky); font-weight: 600; min-width: 36px; }
+
+    /* Feed Filters */
+    .feed-filters { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+    .filter-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 18px; border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass); color: var(--muted);
+      font-size: 0.82rem; cursor: pointer;
+      transition: all 0.3s; font-family: 'Noto Sans SC', sans-serif;
+    }
+    .filter-btn:hover { color: #fff; border-color: rgba(74,158,255,0.4); }
+    .filter-btn.active { background: rgba(74,158,255,0.15); color: var(--sky); border-color: rgba(74,158,255,0.4); }
+
+    /* Video Grid */
+    .video-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    .video-card {
+      border-radius: 20px; overflow: hidden;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .video-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); border-color: rgba(74,158,255,0.3); }
+
+    .video-thumb {
+      position: relative; height: 180px; cursor: pointer; overflow: hidden;
+    }
+    .thumb-bg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+    .video-thumb:hover .thumb-bg { transform: scale(1.05); }
+    .video-duration {
+      position: absolute; bottom: 8px; right: 10px;
+      background: rgba(0,0,0,0.75); color: #fff;
+      font-size: 0.72rem; padding: 2px 8px; border-radius: 4px;
+      font-weight: 500;
+    }
+    .video-views {
+      position: absolute; bottom: 8px; left: 10px;
+      color: rgba(255,255,255,0.85); font-size: 0.72rem;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .video-info { padding: 16px; }
+    .video-author-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .video-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600; color: #fff;
+      flex-shrink: 0;
+    }
+    .video-meta { flex: 1; min-width: 0; }
+    .video-title {
+      font-size: 0.88rem; color: #fff; font-weight: 500;
+      line-height: 1.4; margin-bottom: 4px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .video-author { font-size: 0.75rem; color: var(--muted); }
+
+    .video-actions { display: flex; align-items: center; gap: 8px; }
+    .action-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      background: transparent; color: var(--muted);
+      font-size: 0.78rem; cursor: pointer;
+      transition: all 0.25s; font-family: 'Noto Sans SC', sans-serif;
+    }
+    .action-btn:hover { color: #fff; background: var(--glass); }
+
+    .like-btn.liked { color: #ff4757 !important; border-color: rgba(255,71,87,0.4) !important; background: rgba(255,71,87,0.1) !important; }
+    .like-btn.liked i { animation: heartBeat 0.4s ease; }
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.4); }
+      60% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── COMMENT PANEL ── */
+    .comment-panel {
+      position: fixed; top: 0; right: -420px; width: 420px; height: 100vh;
+      background: #0a1a2e;
+      border-left: 1px solid var(--glass-border);
+      z-index: 99998; display: flex; flex-direction: column;
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.4);
+    }
+    .comment-panel.open { right: 0; }
+
+    .comment-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .comment-header h3 { font-family: 'Noto Serif SC', serif; font-size: 1.1rem; color: #fff; }
+    .panel-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-size: 0.85rem;
+    }
+    .panel-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    .comment-input-area { padding: 16px 24px; display: flex; gap: 12px; border-bottom: 1px solid var(--glass-border); }
+    .comment-user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .comment-input-wrap { flex: 1; }
+    .comment-input {
+      width: 100%; background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 10px 14px; color: #fff;
+      font-size: 0.85rem; font-family: 'Noto Sans SC', sans-serif;
+      resize: none; outline: none; transition: border-color 0.3s;
+      line-height: 1.6;
+    }
+    .comment-input::placeholder { color: var(--muted); }
+    .comment-input:focus { border-color: rgba(74,158,255,0.5); }
+    .comment-input-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .btn-comment-submit {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--sky); color: var(--deep);
+      padding: 6px 16px; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer;
+      transition: all 0.3s; font-family: 'Noto Sans SC', sans-serif;
+    }
+    .btn-comment-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,158,255,0.3); }
+
+    .comment-list { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 20px; }
+    .comment-item { display: flex; gap: 12px; }
+    .comment-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .comment-body { flex: 1; }
+    .comment-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .comment-author { font-size: 0.82rem; color: #fff; font-weight: 500; }
+    .comment-time { font-size: 0.72rem; color: var(--muted); }
+    .comment-text { font-size: 0.85rem; color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+    .comment-reactions { display: flex; align-items: center; gap: 12px; }
+    .reaction-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: transparent; border: none; color: var(--muted);
+      font-size: 0.75rem; cursor: pointer; transition: color 0.2s;
+      font-family: 'Noto Sans SC', sans-serif; padding: 2px 0;
+    }
+    .reaction-btn:hover { color: var(--sky); }
+    .reaction-btn.reacted { color: var(--sky); }
+    .comment-reply { margin-top: 12px; padding-left: 0; }
+    .comment-reply-item { padding-left: 16px; border-left: 2px solid rgba(74,158,255,0.2); }
+
+    /* ── VIDEO PLAYER MODAL ── */
+    .video-player-modal {
+      position: fixed; inset: 0; z-index: 99997;
+      background: rgba(5,13,26,0.9); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .video-player-modal.open { display: flex; animation: fadeIn 0.25s ease; }
+    .vpm-content {
+      background: #0a1a2e; border: 1px solid var(--glass-border);
+      border-radius: 24px; max-width: 720px; width: 100%; position: relative;
+      overflow: hidden; animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .vpm-player { background: #000; }
+    .vpm-placeholder {
+      height: 360px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .vpm-placeholder i { font-size: 4rem; }
+    .vpm-placeholder p { font-size: 1rem; font-family: 'Noto Sans SC', sans-serif; }
+    .vpm-info { padding: 24px; }
+    .vpm-info h3 { font-family: 'Noto Serif SC', serif; font-size: 1.1rem; color: #fff; margin-bottom: 10px; }
+    .vpm-stats { display: flex; gap: 16px; font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
+    .vpm-stats span { display: flex; align-items: center; gap: 5px; }
+    .vpm-author { display: flex; align-items: center; gap: 12px; }
+    .btn-follow {
+      margin-left: auto; background: var(--sky); color: var(--deep);
+      border: none; padding: 7px 18px; border-radius: 100px;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: all 0.3s; font-family: 'Noto Sans SC', sans-serif;
+    }
+    .btn-follow:hover { box-shadow: 0 4px 16px rgba(74,158,255,0.4); }
+
+    @media (max-width: 900px) {
+      .video-grid { grid-template-columns: 1fr 1fr; }
+      .comment-panel { width: 100%; right: -100%; }
+    }
+    @media (max-width: 600px) {
+      .video-grid { grid-template-columns: 1fr; }
+      .upload-zone { padding: 32px 20px; }
+    }
+
+    /* ── FLOATING ELEMENTS ── */
+    .float-orb {
+      position: fixed; border-radius: 50%; pointer-events: none;
+      filter: blur(80px); z-index: 0;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    .float-orb-1 {
+      width: 400px; height: 400px;
+      background: rgba(45,110,194,0.12);
+      top: -100px; right: -100px;
+    }
+    .float-orb-2 {
+      width: 300px; height: 300px;
+      background: rgba(0,201,167,0.08);
+      bottom: 200px; left: -80px;
+      animation-delay: -5s;
+    }
+    .float-orb-3 {
+      width: 250px; height: 250px;
+      background: rgba(245,166,35,0.07);
+      bottom: -50px; right: 20%;
+      animation-delay: -8s;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* ── REVEAL ANIMATION ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal.visible {
+      opacity: 1; transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ── LANG SWITCHER ── */
+    .lang-switcher { position: relative; }
+
+    .lang-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .lang-btn:hover { color: #fff; border-color: rgba(74,158,255,0.4); background: rgba(74,158,255,0.1); }
+    .lang-btn .fa-globe { font-size: 0.85rem; }
+
+    .lang-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: rgba(5,13,26,0.96);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 8px;
+      min-width: 180px;
+      display: none;
+      flex-direction: column; gap: 2px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      z-index: 9999;
+    }
+    .lang-dropdown.open { display: flex; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .lang-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Noto Sans SC', sans-serif;
+      text-align: left; width: 100%;
+    }
+    .lang-option:hover { background: rgba(74,158,255,0.1); color: #fff; }
+    .lang-option.active { color: var(--sky); background: rgba(74,158,255,0.1); }
+    .lang-flag { font-size: 1.1rem; }
+    .lang-check { margin-left: auto; font-size: 0.7rem; opacity: 0; }
+    .lang-option.active .lang-check { opacity: 1; }
+
+    /* ── WECHAT LOGIN BUTTON ── */
+    .wechat-login-btn {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(0,175,80,0.1);
+      border: 1px solid rgba(0,175,80,0.3);
+      border-radius: 100px;
+      padding: 7px 18px;
+      color: #00c853;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .wechat-login-btn:hover {
+      background: rgba(0,175,80,0.2);
+      border-color: rgba(0,175,80,0.6);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,175,80,0.2);
+    }
+    .wechat-login-btn svg { flex-shrink: 0; }
+
+    /* ── WECHAT LOGIN MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      background: rgba(5,13,26,0.85);
+      backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.25s ease; }
+
+    .modal-box {
+      background: linear-gradient(145deg, #0d2137, #081525);
+      border: 1px solid rgba(0,175,80,0.25);
+      border-radius: 24px;
+      padding: 44px 40px;
+      max-width: 400px; width: 100%;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.88) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    .modal-icon {
+      width: 64px; height: 64px; border-radius: 20px;
+      background: rgba(0,175,80,0.15);
+      border: 1px solid rgba(0,175,80,0.3);
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-icon svg { width: 32px; height: 32px; color: #00c853; }
+
+    .modal-box h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.35rem; color: #fff; margin-bottom: 8px;
+    }
+    .modal-box .modal-sub {
+      font-size: 0.85rem; color: var(--muted); margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .wechat-qr {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      position: relative; overflow: hidden;
+    }
+    .wechat-qr-placeholder {
+      width: 200px; height: 200px;
+      background: repeating-linear-gradient(
+        0deg,
+        #f0f0f0 0px, #f0f0f0 20px,
+        #e8e8e8 20px, #e8e8e8 40px
+      );
+      border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px;
+    }
+    .wechat-qr-placeholder svg { color: #aaa; }
+    .wechat-qr-placeholder span { font-size: 0.75rem; color: #aaa; font-family: sans-serif; }
+
+    .wechat-scan-tip {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .wechat-scan-tip i { color: #00c853; }
+
+    .modal-divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 20px 0;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .modal-divider::before, .modal-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--glass-border);
+    }
+
+    .modal-other-login {
+      display: flex; gap: 12px;
+    }
+    .modal-social-btn {
+      flex: 1; padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--text);
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.3s;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .modal-social-btn:hover { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      section { padding: 80px 24px; }
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .about { grid-template-columns: 1fr; gap: 40px; }
+      .about-visual { height: 280px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .hero-stats { gap: 24px; }
+      .cta-card { padding: 50px 30px; }
+      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .topics-grid { grid-template-columns: 1fr 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      .hero-stats { flex-wrap: wrap; gap: 24px; }
+      .stat-divider { display: none; }
+    }
+
+    /* ── PARTICLES ── */
+    #particles {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles"></canvas>
+  <div class="float-orb float-orb-1"></div>
+  <div class="float-orb float-orb-2"></div>
+  <div class="float-orb float-orb-3"></div>
+
+  <!-- ── NAVIGATION ── -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">
+      <div class="dot"></div>
+      BlueTube
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about" data-i18n="nav_about">关于</a></li>
+      <li><a href="#videos" data-i18n="nav_videos">视频</a></li>
+      <li><a href="#features" data-i18n="nav_features">核心功能</a></li>
+      <li><a href="#topics" data-i18n="nav_topics">学习方向</a></li>
+      <li><a href="#testimonials" data-i18n="nav_testimonials">社区声音</a></li>
+      <!-- Language Switcher -->
+      <li>
+        <div class="lang-switcher" id="langSwitcher">
+          <button class="lang-btn" id="langBtn" aria-label="切换语言">
+            <i class="fa-solid fa-globe"></i>
+            <span id="langLabel">中文</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;"></i>
+          </button>
+          <div class="lang-dropdown" id="langDropdown">
+            <button class="lang-option active" data-lang="zh">
+              <span class="lang-flag">🇨🇳</span>
+              <span>简体中文</span>
+              <i class="fa-solid fa-check lang-check"></i>
+            </button>
+            <button class="lang-option" data-lang="en">
+              <span class="lang-flag">🇺🇸</span>
+              <span>English</span>
+              <i class="fa-solid fa-check lang-check"></i>
+            </button>
+            <button class="lang-option" data-lang="ja">
+              <span class="lang-flag">🇯🇵</span>
+              <span>日本語</span>
+              <i class="fa-solid fa-check lang-check"></i>
+            </button>
+            <button class="lang-option" data-lang="ko">
+              <span class="lang-flag">🇰🇷</span>
+              <span>한국어</span>
+              <i class="fa-solid fa-check lang-check"></i>
+            </button>
+          </div>
+        </div>
+      </li>
+      <!-- WeChat Login -->
+      <li>
+        <button class="wechat-login-btn" id="wechatLoginBtn" aria-label="微信登录">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.87l-.406-.012zm-2.53 2.658c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+          <span data-i18n="nav_login">登录</span>
+        </button>
+      </li>
+      <li><a href="#join" class="nav-cta" data-i18n="nav_join">立即加入</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="spark"></span>
+        深度学习 · 思想交流
+      </div>
+      <h1>
+        在<span class="blue">知识的海洋</span>里<br>
+        遇见<span class="amber"><span class="wave">~</span>更好的思考者</span>
+      </h1>
+      <p class="hero-sub">
+        BlueTube 是一个开放的学习交流平台，汇聚来自各领域的终身学习者，<br>
+        通过深度讨论、协作学习与思想碰撞，一起探索更广阔的知识边界。
+      </p>
+      <div class="hero-actions">
+        <a href="#join" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          免费加入社区
+        </a>
+        <a href="#about" class="btn-ghost">
+          了解更多
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">12K<span class="accent">+</span></div>
+          <div class="stat-label">活跃学习者</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num">200<span class="accent">+</span></div>
+          <div class="stat-label">专题小组</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num">5K<span class="accent">+</span></div>
+          <div class="stat-label">讨论帖文</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-num">50<span class="accent">+</span></div>
+          <div class="stat-label">领域覆盖</div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      <span>向下探索</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section id="about">
+    <div class="about">
+      <div class="about-visual reveal">
+        <div class="about-visual-inner">
+          <div class="about-icon-grid">
+            <div class="about-icon-cell" style="background:rgba(74,158,255,0.2);">📚</div>
+            <div class="about-icon-cell" style="background:rgba(0,201,167,0.2);">💡</div>
+            <div class="about-icon-cell" style="background:rgba(245,166,35,0.2);">🤝</div>
+            <div class="about-icon-cell" style="background:rgba(255,124,67,0.2);">🎯</div>
+            <div class="about-icon-cell" style="background:rgba(74,158,255,0.15);">🌐</div>
+            <div class="about-icon-cell" style="background:rgba(0,201,167,0.15);">🚀</div>
+            <div class="about-icon-cell" style="background:rgba(245,166,35,0.15);">📖</div>
+            <div class="about-icon-cell" style="background:rgba(255,124,67,0.15);">🎨</div>
+            <div class="about-icon-cell" style="background:rgba(74,158,255,0.1);">⚡</div>
+          </div>
+          <div class="about-visual-text">
+            <h3>汇聚思想，连接可能</h3>
+            <p>Every mind counts</p>
+          </div>
+        </div>
+      </div>
+      <div class="about-content">
+        <span class="section-tag reveal">关于 BlueTube</span>
+        <h2 class="section-title reveal reveal-delay-1">不只是学习平台<br>是思考者的聚集地</h2>
+        <p class="section-desc reveal reveal-delay-2">
+          我们相信，最好的学习发生在对话中。BlueTube 致力于打造一个没有门槛、没有权威、
+          只有真诚探讨的知识空间，让每个人都敢于提问、勇于分享、善于思考。
+        </p>
+        <div class="features-list">
+          <div class="feature-item reveal reveal-delay-2">
+            <div class="feature-icon">🧠</div>
+            <div>
+              <h4>深度思辨</h4>
+              <p>鼓励独立思考，提倡有理有据的讨论，拒绝浅层信息堆砌。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal reveal-delay-3">
+            <div class="feature-icon">🤝</div>
+            <div>
+              <h4>跨界连接</h4>
+              <p>打破学科边界，让不同背景的思考者相互启发，碰撞新灵感。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal reveal-delay-4">
+            <div class="feature-icon">🌱</div>
+            <div>
+              <h4>共同成长</h4>
+              <p>在学习中结识志同道合的伙伴，一起进步，一起成为更好的人。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section id="features">
+    <div class="features-section">
+      <div class="features-header">
+        <span class="section-tag reveal">核心功能</span>
+        <h2 class="section-title reveal reveal-delay-1">为深度学习而设计</h2>
+        <p class="section-desc reveal reveal-delay-2">
+          我们构建了整套工具，帮助你在学习的每个环节都能高效、安心、有收获。
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-card-icon">📝</div>
+          <h3>主题讨论区</h3>
+          <p>按兴趣领域建立讨论小组，围绕核心议题展开深度对话，有序有据，拒绝无效噪音。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-card-icon">📚</div>
+          <h3>学习资源库</h3>
+          <p>社区成员共建共享资料库，书单、课程、工具推荐，真实评价，帮你在信息洪流中筛选精华。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-card-icon">💡</div>
+          <h3>每日思考</h3>
+          <p>每天一个开放性问题，激发思维活跃度，让思考成为一种习惯，而非偶尔的奢侈。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-card-icon">🎯</div>
+          <h3>学习目标墙</h3>
+          <p>公开你的学习目标，获得社区支持与监督，完成目标时与同伴分享喜悦，形成正向循环。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="feature-card-icon">🗣️</div>
+          <h3>AMA 圆桌会</h3>
+          <p>邀请各领域专家、从业者进行问答AMA，深入了解一个行业的真实面貌与发展路径。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="feature-card-icon">🏆</div>
+          <h3>学习成就系统</h3>
+          <p>记录你的学习轨迹，解锁成就徽章，追踪成长曲线，让每一步都有迹可循，有感可享。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TOPICS ── -->
+  <section id="topics" class="topics-section">
+    <div class="topics-header">
+      <span class="section-tag reveal">学习方向</span>
+      <h2 class="section-title reveal reveal-delay-1">探索你的兴趣领域</h2>
+      <p class="section-desc reveal reveal-delay-2">
+        无论你是技术极客还是人文爱好者，这里总有一个属于你的角落。
+      </p>
+    </div>
+    <div class="topics-grid">
+      <div class="topic-chip reveal">
+        <div class="t-icon" style="background:rgba(74,158,255,0.15);">💻</div>
+        <div class="t-info">
+          <h4>编程与开发</h4>
+          <span>1,820 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-1">
+        <div class="t-icon" style="background:rgba(0,201,167,0.15);">🧪</div>
+        <div class="t-info">
+          <h4>人工智能</h4>
+          <span>2,340 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-2">
+        <div class="t-icon" style="background:rgba(245,166,35,0.15);">📊</div>
+        <div class="t-info">
+          <h4>数据分析</h4>
+          <span>980 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-3">
+        <div class="t-icon" style="background:rgba(255,124,67,0.15);">🎨</div>
+        <div class="t-info">
+          <h4>设计思维</h4>
+          <span>760 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-1">
+        <div class="t-icon" style="background:rgba(74,158,255,0.1);">📖</div>
+        <div class="t-info">
+          <h4>哲学与思辨</h4>
+          <span>620 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-2">
+        <div class="t-icon" style="background:rgba(0,201,167,0.1);">🌍</div>
+        <div class="t-info">
+          <h4>语言学习</h4>
+          <span>1,150 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-3">
+        <div class="t-icon" style="background:rgba(245,166,35,0.1);">📈</div>
+        <div class="t-info">
+          <h4>商业与管理</h4>
+          <span>890 名成员</span>
+        </div>
+      </div>
+      <div class="topic-chip reveal reveal-delay-4">
+        <div class="t-icon" style="background:rgba(255,124,67,0.1);">🔬</div>
+        <div class="t-info">
+          <h4>心理学</h4>
+          <span>730 名成员</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TESTIMONIALS ── -->
+  <section id="testimonials">
+    <div class="testimonials-section">
+      <div class="testimonials-header">
+        <span class="section-tag reveal">社区声音</span>
+        <h2 class="section-title reveal reveal-delay-1">他们在这里找到了什么</h2>
+        <p class="section-desc reveal reveal-delay-2">
+          来自社区成员的真实反馈，他们的学习之旅从这里开始改变。
+        </p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal">
+          <div class="quote-mark">"</div>
+          <div class="stars">★★★★★</div>
+          <blockquote>在这里我找到了真正愿意认真讨论的朋友，不再是社交媒体的碎片化信息，而是有深度的思考碰撞。</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#2d6ec2,#4a9eff);">林</div>
+            <div>
+              <div class="name">林雨桐</div>
+              <div class="role">产品经理 · AI 学习者</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-1">
+          <div class="quote-mark">"</div>
+          <div class="stars">★★★★★</div>
+          <blockquote>每天的思考题让我养成了记录想法的习惯，这种持续的小练习比读完一本书更有价值。</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#00c9a7,#4a9eff);">张</div>
+            <div>
+              <div class="name">张浩然</div>
+              <div class="role">独立开发者</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-2">
+          <div class="quote-mark">"</div>
+          <div class="stars">★★★★★</div>
+          <blockquote>AMA 圆桌会是我最喜欢的功能，直接和行业资深人士对话，得到的收获远比读十篇文章多得多。</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background:linear-gradient(135deg,#f5a623,#ff7c43);">王</div>
+            <div>
+              <div class="name">王思远</div>
+              <div class="role">在读研究生 · 数据科学</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── VIDEO FEED ── -->
+  <section id="videos">
+    <div class="video-section-wrap">
+      <div class="video-header">
+        <span class="section-tag reveal">视频学习</span>
+        <h2 class="section-title reveal reveal-delay-1">分享你的学习时刻</h2>
+        <p class="section-desc reveal reveal-delay-2">上传学习视频，记录成长，与社区分享你的思考与收获。</p>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="upload-zone reveal" id="uploadZone">
+        <div class="upload-icon">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div class="upload-text">
+          <h3 id="uploadTitle">拖拽视频到这里</h3>
+          <p id="uploadSub">或点击选择文件 · 支持 MP4、MOV、AVI</p>
+        </div>
+        <input type="file" id="videoInput" accept="video/*" style="display:none;">
+        <button class="btn-upload" id="btnSelectFile">
+          <i class="fa-solid fa-folder-open"></i>
+          <span id="selectBtnText">选择视频文件</span>
+        </button>
+        <div class="upload-progress" id="uploadProgress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <span class="progress-text" id="progressText">0%</span>
+        </div>
+      </div>
+
+      <!-- Video Feed -->
+      <div class="video-feed">
+        <div class="feed-filters">
+          <button class="filter-btn active" data-filter="all" id="filterAll">
+            <i class="fa-solid fa-fire"></i> 最新
+          </button>
+          <button class="filter-btn" data-filter="hot" id="filterHot">
+            <i class="fa-solid fa-bolt"></i> 热门
+          </button>
+          <button class="filter-btn" data-filter="following" id="filterFollowing">
+            <i class="fa-solid fa-star"></i> 关注
+          </button>
+        </div>
+
+        <div class="video-grid" id="videoGrid">
+          <!-- Video Card 1 -->
+          <div class="video-card reveal" data-filter="all">
+            <div class="video-thumb" onclick="playVideo(this)">
+              <div class="thumb-bg" style="background:linear-gradient(135deg,#1a4a7a,#0a2342);">
+                <i class="fa-solid fa-play-circle" style="font-size:3rem;color:#fff;opacity:0.8;"></i>
+              </div>
+              <span class="video-duration">12:34</span>
+              <span class="video-views"><i class="fa-solid fa-eye"></i> 2.3K</span>
+            </div>
+            <div class="video-info">
+              <div class="video-author-row">
+                <div class="video-avatar" style="background:linear-gradient(135deg,#2d6ec2,#4a9eff);">李</div>
+                <div class="video-meta">
+                  <h4 class="video-title">Python 入门：从零到第一个爬虫</h4>
+                  <span class="video-author">李明轩 · 3天前</span>
+                </div>
+              </div>
+              <div class="video-actions">
+                <button class="action-btn like-btn" data-likes="328" onclick="toggleLike(this)">
+                  <i class="fa-solid fa-heart"></i>
+                  <span class="like-count">328</span>
+                </button>
+                <button class="action-btn comment-btn" onclick="openComments(this)">
+                  <i class="fa-solid fa-comment-dots"></i>
+                  <span class="comment-count">42</span>
+                </button>
+                <button class="action-btn share-btn">
+                  <i class="fa-solid fa-share"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Card 2 -->
+          <div class="video-card reveal reveal-delay-1" data-filter="all">
+            <div class="video-thumb" onclick="playVideo(this)">
+              <div class="thumb-bg" style="background:linear-gradient(135deg,#00c9a7,#0a2342);">
+                <i class="fa-solid fa-play-circle" style="font-size:3rem;color:#fff;opacity:0.8;"></i>
+              </div>
+              <span class="video-duration">08:15</span>
+              <span class="video-views"><i class="fa-solid fa-eye"></i> 1.1K</span>
+            </div>
+            <div class="video-info">
+              <div class="video-author-row">
+                <div class="video-avatar" style="background:linear-gradient(135deg,#00c9a7,#4a9eff);">陈</div>
+                <div class="video-meta">
+                  <h4 class="video-title">深度学习中的注意力机制详解</h4>
+                  <span class="video-author">陈雨晴 · 5天前</span>
+                </div>
+              </div>
+              <div class="video-actions">
+                <button class="action-btn like-btn liked" data-likes="567" onclick="toggleLike(this)">
+                  <i class="fa-solid fa-heart"></i>
+                  <span class="like-count">567</span>
+                </button>
+                <button class="action-btn comment-btn" onclick="openComments(this)">
+                  <i class="fa-solid fa-comment-dots"></i>
+                  <span class="comment-count">89</span>
+                </button>
+                <button class="action-btn share-btn">
+                  <i class="fa-solid fa-share"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Card 3 -->
+          <div class="video-card reveal reveal-delay-2" data-filter="all">
+            <div class="video-thumb" onclick="playVideo(this)">
+              <div class="thumb-bg" style="background:linear-gradient(135deg,#f5a623,#0a2342);">
+                <i class="fa-solid fa-play-circle" style="font-size:3rem;color:#fff;opacity:0.8;"></i>
+              </div>
+              <span class="video-duration">23:40</span>
+              <span class="video-views"><i class="fa-solid fa-eye"></i> 856</span>
+            </div>
+            <div class="video-info">
+              <div class="video-author-row">
+                <div class="video-avatar" style="background:linear-gradient(135deg,#f5a623,#ff7c43);">王</div>
+                <div class="video-meta">
+                  <h4 class="video-title">产品设计思维：从用户需求到原型</h4>
+                  <span class="video-author">王思远 · 1周前</span>
+                </div>
+              </div>
+              <div class="video-actions">
+                <button class="action-btn like-btn" data-likes="201" onclick="toggleLike(this)">
+                  <i class="fa-solid fa-heart"></i>
+                  <span class="like-count">201</span>
+                </button>
+                <button class="action-btn comment-btn" onclick="openComments(this)">
+                  <i class="fa-solid fa-comment-dots"></i>
+                  <span class="comment-count">35</span>
+                </button>
+                <button class="action-btn share-btn">
+                  <i class="fa-solid fa-share"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMMENT PANEL ── -->
+  <div class="comment-panel" id="commentPanel">
+    <div class="comment-header">
+      <h3 id="commentPanelTitle">评论</h3>
+      <button class="panel-close" onclick="closeComments()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="comment-input-area">
+      <div class="comment-user-avatar" style="background:linear-gradient(135deg,#4a9eff,#2d6ec2);">我</div>
+      <div class="comment-input-wrap">
+        <textarea class="comment-input" id="commentInput" placeholder="写下你的想法..." rows="2"></textarea>
+        <div class="comment-input-actions">
+          <button class="btn-comment-submit" onclick="submitComment()">
+            <i class="fa-solid fa-paper-plane"></i> 发送
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="comment-list" id="commentList">
+      <div class="comment-item">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#00c9a7,#4a9eff);">张</div>
+        <div class="comment-body">
+          <div class="comment-top">
+            <span class="comment-author">张浩然</span>
+            <span class="comment-time">2小时前</span>
+          </div>
+          <p class="comment-text">这个爬虫教程讲得很清晰，终于理解正则表达式了！</p>
+          <div class="comment-reactions">
+            <button class="reaction-btn" onclick="toggleReact(this)">
+              <i class="fa-solid fa-thumbs-up"></i> 24
+            </button>
+            <button class="reaction-btn" onclick="replyTo('张浩然')">
+              <i class="fa-solid fa-reply"></i> 回复
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="comment-item">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#f5a623,#ff7c43);">林</div>
+        <div class="comment-body">
+          <div class="comment-top">
+            <span class="comment-author">林雨桐</span>
+            <span class="comment-time">5小时前</span>
+          </div>
+          <p class="comment-text">请问有配套的代码仓库吗？跟着做了一遍遇到点小问题。</p>
+          <div class="comment-reactions">
+            <button class="reaction-btn" onclick="toggleReact(this)">
+              <i class="fa-solid fa-thumbs-up"></i> 8
+            </button>
+            <button class="reaction-btn" onclick="replyTo('林雨桐')">
+              <i class="fa-solid fa-reply"></i> 回复
+            </button>
+          </div>
+          <div class="comment-reply">
+            <div class="comment-item comment-reply-item">
+              <div class="comment-avatar" style="background:linear-gradient(135deg,#2d6ec2,#4a9eff);font-size:0.7rem;">李</div>
+              <div class="comment-body">
+                <div class="comment-top">
+                  <span class="comment-author">李明轩 <span style="color:var(--teal);font-size:0.7rem;">作者</span></span>
+                  <span class="comment-time">3小时前</span>
+                </div>
+                <p class="comment-text">仓库链接已更新在视频简介里～有问题可以私信我！</p>
+                <div class="comment-reactions">
+                  <button class="reaction-btn" onclick="toggleReact(this)">
+                    <i class="fa-solid fa-thumbs-up"></i> 15
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIDEO PLAYER MODAL ── -->
+  <div class="video-player-modal" id="videoPlayerModal">
+    <div class="vpm-content">
+      <button class="panel-close" onclick="closeVideoPlayer()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="vpm-player">
+        <div class="vpm-placeholder">
+          <i class="fa-solid fa-film"></i>
+          <p>视频播放器区域</p>
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">接入视频CDN后即可播放</p>
+        </div>
+      </div>
+      <div class="vpm-info">
+        <h3 id="vpmTitle">Python 入门：从零到第一个爬虫</h3>
+        <div class="vpm-stats">
+          <span><i class="fa-solid fa-eye"></i> 2.3K 次观看</span>
+          <span><i class="fa-solid fa-clock"></i> 3天前发布</span>
+        </div>
+        <div class="vpm-author">
+          <div style="background:linear-gradient(135deg,#2d6ec2,#4a9eff);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;">李</div>
+          <div>
+            <div style="font-size:0.9rem;color:#fff;font-weight:500;">李明轩</div>
+            <div style="font-size:0.75rem;color:var(--muted);">328 粉丝</div>
+          </div>
+          <button class="btn-follow">+ 关注</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA ── -->
+  <section id="join" class="cta-section">
+    <div class="cta-card reveal">
+      <h2>准备好开启你的<br>深度学习之旅了吗？</h2>
+      <p>免费加入，与 12,000+ 志同道合的思考者一起成长</p>
+      <a href="#" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        免费加入 BlueTube
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <!-- WeChat Login Modal -->
+  <div class="modal-overlay" id="wechatModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose" aria-label="关闭">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.87l-.406-.012zm-2.53 2.658c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+      </div>
+      <h3 id="modalTitle">微信扫码登录</h3>
+      <p class="modal-sub" id="modalSub">使用微信扫描下方二维码，快速登录 BlueTube</p>
+
+      <div class="wechat-qr">
+        <div class="wechat-qr-placeholder" id="qrPlaceholder">
+          <i class="fa-solid fa-qrcode" style="font-size:3rem;"></i>
+          <span>bluethinker.app</span>
+        </div>
+      </div>
+      <div class="wechat-scan-tip">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span id="scanTip">打开微信 → 扫一扫</span>
+      </div>
+
+      <div class="modal-divider" id="dividerText">其他登录方式</div>
+      <div class="modal-other-login">
+        <button class="modal-social-btn" onclick="alert('邮箱登录开发中，敬请期待！')">
+          <i class="fa-solid fa-envelope" style="color:#4a9eff;"></i>
+          <span id="emailBtn">邮箱登录</span>
+        </button>
+        <button class="modal-social-btn" onclick="alert('手机号登录开发中，敬请期待！')">
+          <i class="fa-solid fa-mobile-screen-button" style="color:#00c9a7;"></i>
+          <span id="phoneBtn">手机登录</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo">
+          <div class="dot"></div>
+          BlueTube
+        </a>
+        <p>深度学习 · 思想交流 · 共同成长。让每一个热爱思考的人，都能在这里找到归属。</p>
+      </div>
+      <div class="footer-col">
+        <h4>平台</h4>
+        <ul>
+          <li><a href="#">讨论区</a></li>
+          <li><a href="#">资源库</a></li>
+          <li><a href="#">每日思考</a></li>
+          <li><a href="#">AMA 圆桌</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>社区</h4>
+        <ul>
+          <li><a href="#">学习方向</a></li>
+          <li><a href="#">成员故事</a></li>
+          <li><a href="#">贡献指南</a></li>
+          <li><a href="#">成就徽章</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>关于</h4>
+        <ul>
+          <li><a href="#">关于我们</a></li>
+          <li><a href="#">使用条款</a></li>
+          <li><a href="#">隐私政策</a></li>
+          <li><a href="#">联系我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 BlueTube. 用心思考，共同成长。</span>
+      <span>Made with 🧠 for curious minds</span>
+    </div>
+  </footer>
+
+  <script>
+    // ── PARTICLES ──
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.3;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.opacity = Math.random() * 0.5 + 0.1;
+        this.color = Math.random() > 0.7 ? '74,158,255' : '0,201,167';
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ── NAV SCROLL ──
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // ── REVEAL ON SCROLL ──
+    const revealEls = document.querySelectorAll('.reveal');
+
+    // ── LANGUAGE SWITCHER ──
+    const translations = {
+      zh: {
+        nav_about: '关于',
+        nav_videos: '视频',
+        nav_features: '核心功能',
+        nav_topics: '学习方向',
+        nav_testimonials: '社区声音',
+        nav_login: '登录',
+        nav_join: '立即加入',
+        badge: '深度学习 · 思想交流',
+        hero_title_blue: '知识的海洋',
+        hero_title_amber: '更好的思考者',
+        hero_sub: 'BlueTube 是一个开放的学习交流平台，汇聚来自各领域的终身学习者，通过深度讨论、协作学习与思想碰撞，一起探索更广阔的知识边界。',
+        btn_join: '免费加入社区',
+        btn_learn: '了解更多',
+        stat_members: '活跃学习者',
+        stat_groups: '专题小组',
+        stat_posts: '讨论帖文',
+        stat_fields: '领域覆盖',
+        section_tag_about: '关于 BlueTube',
+        about_title: '不只是学习平台',
+        about_title2: '是思考者的聚集地',
+        about_desc: '我们相信，最好的学习发生在对话中。BlueTube 致力于打造一个没有门槛、没有权威、只有真诚探讨的知识空间，让每个人都敢于提问、勇于分享、善于思考。',
+        f1_title: '深度思辨', f1_desc: '鼓励独立思考，提倡有理有据的讨论，拒绝浅层信息堆砌。',
+        f2_title: '跨界连接', f2_desc: '打破学科边界，让不同背景的思考者相互启发，碰撞新灵感。',
+        f3_title: '共同成长', f3_desc: '在学习中结识志同道合的伙伴，一起进步，一起成为更好的人。',
+        section_tag_features: '核心功能',
+        features_title: '为深度学习而设计',
+        features_desc: '我们构建了整套工具，帮助你在学习的每个环节都能高效、安心、有收获。',
+        fc1_title: '主题讨论区', fc1_desc: '按兴趣领域建立讨论小组，围绕核心议题展开深度对话，有序有据，拒绝无效噪音。',
+        fc2_title: '学习资源库', fc2_desc: '社区成员共建共享资料库，书单、课程、工具推荐，帮你在信息洪流中筛选精华。',
+        fc3_title: '每日思考', fc3_desc: '每天一个开放性问题，激发思维活跃度，让思考成为一种习惯，而非偶尔的奢侈。',
+        fc4_title: '学习目标墙', fc4_desc: '公开你的学习目标，获得社区支持与监督，完成目标时与同伴分享喜悦，形成正向循环。',
+        fc5_title: 'AMA 圆桌会', fc5_desc: '邀请各领域专家、从业者进行问答AMA，深入了解一个行业的真实面貌与发展路径。',
+        fc6_title: '学习成就系统', fc6_desc: '记录你的学习轨迹，解锁成就徽章，追踪成长曲线，让每一步都有迹可循，有感可享。',
+        section_tag_topics: '学习方向',
+        topics_title: '探索你的兴趣领域',
+        topics_desc: '无论你是技术极客还是人文爱好者，这里总有一个属于你的角落。',
+        section_tag_testimonials: '社区声音',
+        testimonials_title: '他们在这里找到了什么',
+        testimonials_desc: '来自社区成员的真实反馈，他们的学习之旅从这里开始改变。',
+        cta_title: '准备好开启你的深度学习之旅了吗？',
+        cta_desc: '免费加入，与 12,000+ 志同道合的思考者一起成长',
+        cta_btn: '免费加入 BlueTube',
+        footer_desc: '深度学习 · 思想交流 · 共同成长。让每一个热爱思考的人，都能在这里找到归属。',
+        footer_platform: '平台', footer_community: '社区', footer_about: '关于',
+        scroll_hint: '向下探索',
+        // modal
+        modal_title: '微信扫码登录',
+        modal_sub: '使用微信扫描下方二维码，快速登录 BlueTube',
+        scan_tip: '打开微信 → 扫一扫',
+        divider_text: '其他登录方式',
+        email_btn: '邮箱登录',
+        phone_btn: '手机登录',
+      },
+      en: {
+        nav_about: 'About', nav_features: 'Features', nav_topics: 'Topics',
+        nav_testimonials: 'Testimonials', nav_login: 'Login', nav_join: 'Join Free',
+        badge: 'Deep Learning · Thought Exchange',
+        hero_title_blue: "Knowledge Ocean", hero_title_amber: 'Better Thinkers',
+        hero_sub: 'BlueTube is an open learning community where lifelong learners gather to explore, discuss, and grow together through deep conversation and collaborative study.',
+        btn_join: 'Join Free', btn_learn: 'Learn More',
+        stat_members: 'Active Learners', stat_groups: 'Topic Groups', stat_posts: 'Discussions', stat_fields: 'Fields Covered',
+        section_tag_about: 'About BlueTube',
+        about_title: 'More Than a Learning Platform',
+        about_title2: "It's Where Thinkers Gather",
+        about_desc: "We believe the best learning happens through dialogue. BlueTube is committed to creating a knowledge space with no barriers, no authorities — just genuine exploration.",
+        f1_title: 'Deep Discourse', f1_desc: 'Encourage independent thinking and evidence-based discussion.',
+        f2_title: 'Cross-Disciplinary Connection', f2_desc: 'Break boundaries and spark inspiration across fields.',
+        f3_title: 'Grow Together', f3_desc: 'Meet like-minded companions and grow together.',
+        section_tag_features: 'Core Features', features_title: 'Built for Deep Learning',
+        features_desc: 'A complete toolkit to help you learn efficiently, safely, and meaningfully.',
+        fc1_title: 'Topic Discussions', fc1_desc: 'Organized discussion groups by area of interest with deep dialogue.',
+        fc2_title: 'Resource Library', fc2_desc: 'Community-curated books, courses, and tool recommendations.',
+        fc3_title: 'Daily Thinking', fc3_desc: 'An open question each day to make thinking a habit.',
+        fc4_title: 'Goal Board', fc4_desc: 'Share your goals and gain community support and accountability.',
+        fc5_title: 'AMA Roundtables', fc5_desc: 'Ask Me Anything sessions with experts across industries.',
+        fc6_title: 'Achievement System', fc6_desc: 'Track your learning journey with badges and growth charts.',
+        section_tag_topics: 'Learning Topics', topics_title: 'Explore Your Interests',
+        topics_desc: "Whether you're a tech enthusiast or humanities lover, there's a place for you here.",
+        section_tag_testimonials: 'Community Voices', testimonials_title: 'What They Found Here',
+        testimonials_desc: 'Real feedback from community members whose learning journey started here.',
+        cta_title: 'Ready to Start Your Deep Learning Journey?',
+        cta_desc: 'Join free — grow together with 12,000+ curious minds.',
+        cta_btn: 'Join BlueTube Free',
+        footer_desc: 'Deep Learning · Thought Exchange · Growing Together.',
+        footer_platform: 'Platform', footer_community: 'Community', footer_about: 'About',
+        scroll_hint: 'Scroll to Explore',
+        modal_title: 'WeChat Login', modal_sub: 'Scan the QR code with WeChat to log in quickly.',
+        scan_tip: 'Open WeChat → Scan',
+        divider_text: 'Other Methods', email_btn: 'Email Login', phone_btn: 'Phone Login',
+      },
+      ja: {
+        nav_about: '概要', nav_features: '機能', nav_topics: 'トピック',
+        nav_testimonials: '声', nav_login: 'ログイン', nav_join: '無料参加',
+        badge: 'ディープラーニンング · 思考交流',
+        hero_title_blue: '知識の海', hero_title_amber: 'より良い思考者',
+        hero_sub: 'BlueTubeは、生涯学習者が集まり、深い議論、協力学習、思考の衝突を通じて、より広い知識の境界を一緒に探求するオープンな学習交流プラットフォームです。',
+        btn_join: '無料参加', btn_learn: '詳しく見る',
+        stat_members: 'アクティブ学習者', stat_groups: 'トピックグループ', stat_posts: '議論', stat_fields: '分野',
+        section_tag_about: 'BlueTubeについて',
+        about_title: '学習プラットフォーム超え',
+        about_title2: '思考者の集う場所',
+        about_desc: '最高の学習は対話の中に生まれると信じています。BlueTubeは、障壁も権威もない、真摯な探究の知識空間を作ることに尽力しています。',
+        f1_title: '深い思考', f1_desc: '独立した思考と証拠に基づく議論を奨励します。',
+        f2_title: '分野横断的交流', f2_desc: '異なる背景の思考者を繋ぎ、新しい灵感を生み出します。',
+        f3_title: '一緒に成長', f3_desc: '同じ考えを持つ仲間と出会い、一緒に成長しましょう。',
+        section_tag_features: 'コア機能', features_title: 'ディープラーニンングのために設計',
+        features_desc: '各学習段階で効率的、安心、有意義に 지원하는 도구 모음을 구축했습니다。',
+        fc1_title: 'トピック議論', fc1_desc: '興味別に整理された議論グループ。',
+        fc2_title: 'リソースライブラリ', fc2_desc: '書籍、コース、ツールの推奨を共有。',
+        fc3_title: 'デイリービンキング', fc3_desc: '毎日公開質問で思考を習慣に。',
+        fc4_title: '目標ボード', fc4_desc: '目標を共有し、コミュニティのサポートを得る。',
+        fc5_title: 'AMAラウンドテーブル', fc5_desc: '各分野のプロによるAMAセッション。',
+        fc6_title: '達成システム', fc6_desc: 'バッジと成長チャートで学習記録。',
+        section_tag_topics: '学習トピック', topics_title: '興味を探索',
+        topics_desc: 'テクノロジーファンでも人文愛好家でも、ここにあなたの居場所があります。',
+        section_tag_testimonials: 'コミュニティの声', testimonials_title: 'ここで見つけたもの',
+        testimonials_desc: 'ここから学習を始めたメンバーからのリアルな声。',
+        cta_title: 'ディープラーニンングの旅を始めませんか？',
+        cta_desc: '12,000人以上の同志と無料で成長する',
+        cta_btn: 'BlueTubeに無料参加',
+        footer_desc: 'ディープラーニング · 思考交流 · 一緒に成長',
+        footer_platform: 'プラットフォーム', footer_community: 'コミュニティ', footer_about: '概要',
+        scroll_hint: 'スクロールして探索',
+        modal_title: 'WeChatログイン', modal_sub: 'WeChatでQRコードをスキャンしてログイン',
+        scan_tip: 'WeChatを開く → スキャン',
+        divider_text: 'その他の方法', email_btn: 'メールログイン', phone_btn: '電話ログイン',
+      },
+      ko: {
+        nav_about: '소개', nav_features: '기능', nav_topics: '주제',
+        nav_testimonials: '후기', nav_login: '로그인', nav_join: '무료 참여',
+        badge: '딥러닝 · 사고 교류',
+        hero_title_blue: '지식의 바다', hero_title_amber: '더 나은 사색가',
+        hero_sub: 'BlueTube는 평생 학습자들이 모여 심층적인 논의, 협동 학습, 사고 충돌을 통해 더 넓은 지식의 경계를 함께 탐구하는 열린 학습 교류 플랫폼입니다.',
+        btn_join: '무료 참여', btn_learn: '자세히 보기',
+        stat_members: '활성 학습자', stat_groups: '토픽 그룹', stat_posts: '토론', stat_fields: '분야',
+        section_tag_about: 'BlueTube 소개',
+        about_title: '학습 플랫폼을 넘어',
+        about_title2: '사색가들이 모이는 곳',
+        about_desc: '가장 좋은 학습은 대화에서 일어난다고 믿습니다. BlueTube는 장벽도 권위도 없이 진솔한 탐구가 이루어지는 지식 공간을 만드는 데 전념합니다.',
+        f1_title: '심층적 사고', f1_desc: '독립적 사고와 근거에 기반한 논의를 장려합니다.',
+        f2_title: '학제 간 연결', f2_desc: '다른 배경의 사색가들을 연결하여 새로운 영감을 불러일으킵니다.',
+        f3_title: '함께 성장', f3_desc: '같은 생각을 가진 동료들과 함께 성장하세요.',
+        section_tag_features: '핵심 기능', features_title: '딥러닝을 위해 설계됨',
+        features_desc: '학습의 각 단계에서 효율적이고 안전하며 의미 있게 지원하는 도구 모음을 구축했습니다.',
+        fc1_title: '토론방', fc1_desc: '관심 분야별로 정리된 체계적인 토론 그룹.',
+        fc2_title: '리소스 라이브러리', fc2_desc: '도서, 강의, 도구 추천을 공유.',
+        fc3_title: '일일 사고', fc3_desc: '매일 공개 질문으로 사고를 습관으로.',
+        fc4_title: '목표 게시판', fc4_desc: '목표를 공유하고 커뮤니티 지원을 받으세요.',
+        fc5_title: 'AMA 라운드테이블', fc5_desc: '각 분야 전문가와의AMA 세션.',
+        fc6_title: '업적 시스템', fc6_desc: '배지와 성장 차트로 학습 여정을 기록.',
+        section_tag_topics: '학습 주제', topics_title: '관심 분야 탐색',
+        topics_desc: '기술 애호가든 인문학 애호가든, 여기에 당신의 자리가 있습니다.',
+        section_tag_testimonials: '커뮤니티 목소리', testimonials_title: '여기서 찾은 것',
+        testimonials_desc: '여기서 학습 여정을 시작한 회원들의 솔직한 피드백.',
+        cta_title: '딥러닝 여정을 시작할 준비가 되셨나요?',
+        cta_desc: '12,000명 이상의 동지와 무료로 성장하세요',
+        cta_btn: 'BlueTube 무료 참여',
+        footer_desc: '딥러닝 · 사고 교류 · 함께 성장',
+        footer_platform: '플랫폼', footer_community: '커뮤니티', footer_about: '소개',
+        scroll_hint: '스크롤하여 탐색',
+        modal_title: '위챗 로그인', modal_sub: '위챗으로 QR코드를 스캔하여 빠르게 로그인하세요',
+        scan_tip: '위챗 열기 → 스캔',
+        divider_text: '기타 방법', email_btn: '이메일 로그인', phone_btn: '전화 로그인',
+      }
+    };
+
+    let currentLang = localStorage.getItem('bt-lang') || 'zh';
+
+    function applyTranslations(lang) {
+      const t = translations[lang];
+      if (!t) return;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+      // special cases
+      const h1 = document.querySelector('.hero-content h1');
+      if (h1 && t.hero_title_blue && t.hero_title_amber) {
+        h1.innerHTML = `${t.hero_title_blue}<br><span class="amber"><span class="wave">~</span> ${t.hero_title_amber}</span>`;
+      }
+      document.getElementById('langLabel').textContent = lang === 'zh' ? '中文' : lang === 'en' ? 'English' : lang === 'ja' ? '日本語' : '한국어';
+      // modal
+      if (document.getElementById('modalTitle')) document.getElementById('modalTitle').textContent = t.modal_title;
+      if (document.getElementById('modalSub')) document.getElementById('modalSub').textContent = t.modal_sub;
+      if (document.getElementById('scanTip')) document.getElementById('scanTip').textContent = t.scan_tip;
+      if (document.getElementById('dividerText')) document.getElementById('dividerText').textContent = t.divider_text;
+      if (document.getElementById('emailBtn')) document.getElementById('emailBtn').textContent = t.email_btn;
+      if (document.getElementById('phoneBtn')) document.getElementById('phoneBtn').textContent = t.phone_btn;
+      // lang options
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.lang === lang);
+      });
+      document.documentElement.lang = lang;
+      localStorage.setItem('bt-lang', lang);
+    }
+
+    // Init lang
+    applyTranslations(currentLang);
+
+    // Lang dropdown toggle
+    const langSwitcher = document.getElementById('langSwitcher');
+    const langDropdown = document.getElementById('langDropdown');
+    langSwitcher.addEventListener('click', (e) => {
+      e.stopPropagation();
+      langDropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', () => langDropdown.classList.remove('open'));
+
+    document.querySelectorAll('.lang-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        currentLang = opt.dataset.lang;
+        applyTranslations(currentLang);
+        langDropdown.classList.remove('open');
+      });
+    });
+
+    // ── WECHAT LOGIN MODAL ──
+    const wechatModal = document.getElementById('wechatModal');
+    const wechatLoginBtn = document.getElementById('wechatLoginBtn');
+    const modalClose = document.getElementById('modalClose');
+
+    if (wechatLoginBtn && wechatModal) {
+      wechatLoginBtn.addEventListener('click', () => wechatModal.classList.add('open'));
+    }
+    if (modalClose && wechatModal) {
+      modalClose.addEventListener('click', () => wechatModal.classList.remove('open'));
+    }
+    wechatModal && wechatModal.addEventListener('click', (e) => {
+      if (e.target === wechatModal) wechatModal.classList.remove('open');
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') wechatModal && wechatModal.classList.remove('open'); });
+
+    // ══════════════════════════════════════════
+    // VIDEO FEED FEATURES
+    // ══════════════════════════════════════════
+
+    // ── Video Upload ──
+    const uploadZone = document.getElementById('uploadZone');
+    const videoInput = document.getElementById('videoInput');
+    const btnSelectFile = document.getElementById('btnSelectFile');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    btnSelectFile && btnSelectFile.addEventListener('click', (e) => { e.stopPropagation(); videoInput && videoInput.click(); });
+
+    uploadZone && uploadZone.addEventListener('click', () => videoInput && videoInput.click());
+
+    uploadZone && uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault(); uploadZone.classList.add('dragover');
+    });
+    uploadZone && uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone && uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault(); uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('video/')) handleVideoUpload(file);
+    });
+
+    videoInput && videoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleVideoUpload(file);
+    });
+
+    function handleVideoUpload(file) {
+      const maxSize = 500 * 1024 * 1024; // 500MB
+      if (file.size > maxSize) {
+        alert('视频文件不能超过 500MB');
+        return;
+      }
+      uploadProgress.style.display = 'flex';
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setTimeout(() => {
+            uploadProgress.style.display = 'none';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            alert('✅ 视频上传成功！\n（当前为演示模式，接入后端后可真正上传）');
+          }, 600);
+        }
+        progressFill.style.width = progress + '%';
+        progressText.textContent = Math.round(progress) + '%';
+      }, 200);
+    }
+
+    // ── Filter Buttons ──
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.video-card').forEach(card => {
+          if (filter === 'all' || card.dataset.filter === filter) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // ── Like System ──
+    function toggleLike(btn) {
+      const icon = btn.querySelector('i');
+      const countEl = btn.querySelector('.like-count');
+      const likes = parseInt(btn.dataset.likes);
+      const isLiked = btn.classList.contains('liked');
+      if (isLiked) {
+        btn.classList.remove('liked');
+        icon.className = 'fa-solid fa-heart';
+        countEl.textContent = likes;
+        btn.dataset.likes = likes;
+      } else {
+        btn.classList.add('liked');
+        icon.className = 'fa-solid fa-heart';
+        countEl.textContent = (likes || 0) + 1;
+        btn.dataset.likes = likes + 1;
+      }
+    }
+
+    // ── Comment Panel ──
+    let activeCommentCard = null;
+    function openComments(btn) {
+      const panel = document.getElementById('commentPanel');
+      panel.classList.add('open');
+      activeCommentCard = btn.closest('.video-card');
+      const title = activeCommentCard ? activeCommentCard.querySelector('.video-title').textContent : '评论';
+      document.getElementById('commentPanelTitle').textContent = title;
+    }
+    function closeComments() {
+      document.getElementById('commentPanel').classList.remove('open');
+    }
+    document.getElementById('commentPanel') && document.getElementById('commentPanel').addEventListener('click', (e) => {
+      if (e.target.id === 'commentPanel') closeComments();
+    });
+
+    function submitComment() {
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const list = document.getElementById('commentList');
+      const now = new Date();
+      const timeStr = '刚刚';
+      const newComment = document.createElement('div');
+      newComment.className = 'comment-item';
+      newComment.innerHTML = `
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#4a9eff,#2d6ec2);">我</div>
+        <div class="comment-body">
+          <div class="comment-top">
+            <span class="comment-author">我</span>
+            <span class="comment-time">${timeStr}</span>
+          </div>
+          <p class="comment-text">${text}</p>
+          <div class="comment-reactions">
+            <button class="reaction-btn" onclick="toggleReact(this)">
+              <i class="fa-solid fa-thumbs-up"></i> 0
+            </button>
+            <button class="reaction-btn" onclick="replyTo('我')">
+              <i class="fa-solid fa-reply"></i> 回复
+            </button>
+          </div>
+        </div>`;
+      list.insertBefore(newComment, list.firstChild);
+      input.value = '';
+      // Update comment count
+      if (activeCommentCard) {
+        const countEl = activeCommentCard.querySelector('.comment-count');
+        if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+      }
+    }
+
+    function toggleReact(btn) {
+      btn.classList.toggle('reacted');
+      const icon = btn.querySelector('i');
+      const match = btn.textContent.match(/(\d+)/);
+      let count = match ? parseInt(match[1]) : 0;
+      if (btn.classList.contains('reacted')) {
+        count++;
+      } else {
+        count = Math.max(0, count - 1);
+      }
+      const label = icon.className.includes('thumbs') ? '顶' : '回复';
+      btn.innerHTML = `<i class="${icon.className}"></i> ${count}`;
+    }
+
+    function replyTo(name) {
+      const input = document.getElementById('commentInput');
+      input.focus();
+      input.placeholder = `回复 @${name}：`;
+      setTimeout(() => { input.placeholder = '写下你的想法...'; }, 3000);
+    }
+
+    // ── Video Player ──
+    function playVideo(thumb) {
+      const card = thumb.closest('.video-card');
+      const title = card ? card.querySelector('.video-title').textContent : '';
+      document.getElementById('vpmTitle').textContent = title;
+      document.getElementById('videoPlayerModal').classList.add('open');
+    }
+    function closeVideoPlayer() {
+      document.getElementById('videoPlayerModal').classList.remove('open');
+    }
+    document.getElementById('videoPlayerModal') && document.getElementById('videoPlayerModal').addEventListener('click', (e) => {
+      if (e.target.id === 'videoPlayerModal') closeVideoPlayer();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeVideoPlayer();
+        closeComments();
+      }
+    });
+
+    // ── Translations for new sections ──
+    const extraTranslations = {
+      zh: {
+        video_section_tag: '视频学习', video_title: '分享你的学习时刻',
+        video_desc: '上传学习视频，记录成长，与社区分享你的思考与收获。',
+        upload_title: '拖拽视频到这里', upload_sub: '或点击选择文件 · 支持 MP4、MOV、AVI',
+        select_btn: '选择视频文件',
+        filter_all: '最新', filter_hot: '热门', filter_following: '关注',
+        comment_title: '评论', comment_placeholder: '写下你的想法...',
+        send_btn: '发送', reply: '回复',
+        vpm_placeholder: '视频播放器区域', vpm_tip: '接入视频CDN后即可播放',
+        follow_btn: '关注',
+      },
+      en: {
+        video_section_tag: 'Video Learning', video_title: 'Share Your Learning Moments',
+        video_desc: 'Upload learning videos, record growth, and share your insights with the community.',
+        upload_title: 'Drag & drop video here', upload_sub: 'or click to select · MP4, MOV, AVI',
+        select_btn: 'Select Video',
+        filter_all: 'Latest', filter_hot: 'Hot', filter_following: 'Following',
+        comment_title: 'Comments', comment_placeholder: 'Write your thoughts...',
+        send_btn: 'Send', reply: 'Reply',
+        vpm_placeholder: 'Video Player', vpm_tip: 'Connect video CDN to play',
+        follow_btn: 'Follow',
+      }
+    };
+    Object.assign(translations.zh, extraTranslations.zh);
+    Object.assign(translations.en, extraTranslations.en);
+
+    // Re-apply translations for new elements
+    function applyExtraTranslations(lang) {
+      const t = extraTranslations[lang] || extraTranslations.zh;
+      const el = (id, key) => { const e = document.getElementById(id); if (e && t[key]) e.textContent = t[key]; };
+      el('uploadTitle', 'upload_title'); el('uploadSub', 'upload_sub');
+      el('selectBtnText', 'select_btn');
+      el('filterAll', 'filter_all'); el('filterHot', 'filter_hot'); el('filterFollowing', 'filter_following');
+      el('commentPanelTitle', 'comment_title'); el('commentInput', 'comment_placeholder');
+    }
+    applyExtraTranslations(currentLang);
+
+    // Override applyTranslations to include extra
+    const _applyTranslations = applyTranslations;
+    function applyTranslationsFull(lang) {
+      applyTranslations(lang);
+      applyExtraTranslations(lang);
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
